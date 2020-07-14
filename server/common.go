@@ -2,20 +2,26 @@ package server
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gmo-personal/picshare_auth_service/database"
+	"github.com/gmo-personal/picshare_auth_service/model"
 	"log"
 	"net/http"
-	"smart_photos/auth_service/database"
-	"smart_photos/auth_service/model"
+	"time"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
 }
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func InitServer() {
 	http.HandleFunc("/", handler)
-	http.HandleFunc("/signup", signupHandler)
-	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/signup/", signupHandler)
+	http.HandleFunc("/login/", loginHandler)
 
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
@@ -30,7 +36,7 @@ func getURLParam(r *http.Request, paramName string) string {
 }
 
 func signupHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	enableCors(&w)
 	username := getURLParam(r, "username")
 	email := getURLParam(r, "email")
 	firstName := getURLParam(r, "first_name")
@@ -50,5 +56,28 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	usernameEmail := getURLParam(r, "usernameEmail")
+	password := getURLParam(r, "password")
 
+	username := database.MatchUsernameOrEmailToPassword(usernameEmail, password)
+	token := CreateToken(username)
+
+	_, _ = fmt.Fprintf(w, username + " TOKEN: " + token)
+}
+
+
+func CreateToken(username string) string {
+	var err error
+	//Creating Access Token
+	secret := "jdnfksdmfksd"
+	atClaims := jwt.MapClaims{}
+	atClaims["username"] = username
+	atClaims["expire"] = time.Now().Add(time.Minute * 360).Unix()
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	token, err := at.SignedString([]byte(secret))
+	if err != nil {
+		return ""
+	}
+	return token
 }

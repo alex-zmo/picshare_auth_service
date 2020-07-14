@@ -2,13 +2,14 @@ package database
 
 import (
 	"fmt"
-	"smart_photos/auth_service/model"
+	"github.com/gmo-personal/picshare_auth_service/model"
 )
 
 func createUserTable() {
 	createUserStmt := `CREATE TABLE IF NOT EXISTS user (
 		id INT AUTO_INCREMENT,
 		username VARCHAR(32),
+		email VARCHAR(1024),
 		first_name VARCHAR(1024),
 		last_name VARCHAR(1024),
 		password VARCHAR(128),
@@ -78,4 +79,27 @@ func checkEmailExists(email string) bool {
 	}
 
 	return false
+}
+
+
+func MatchUsernameOrEmailToPassword(usernameOrEmail, password string) string {
+	selectUserStmt := `SELECT username FROM user WHERE (email = ? OR username = ?) AND password = ?;`
+
+	selectUserResult, err := db.Query(selectUserStmt, usernameOrEmail, usernameOrEmail, password)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	defer closeRows(selectUserResult)
+
+	usernameOut := ""
+
+	if selectUserResult.Next() {
+		err := selectUserResult.Scan(&usernameOut)
+		if err != nil {
+			fmt.Println(err)
+			return ""
+		}
+	}
+	return usernameOut
 }

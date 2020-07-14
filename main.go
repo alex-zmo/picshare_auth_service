@@ -1,8 +1,8 @@
 package main
 
 import (
-	"smart_photos/auth_service/database"
-	"smart_photos/auth_service/server"
+	"github.com/gmo-personal/picshare_auth_service/database"
+	"github.com/gmo-personal/picshare_auth_service/server"
 )
 
 func main() {
