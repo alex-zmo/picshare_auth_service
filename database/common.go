@@ -21,6 +21,7 @@ func InitDatabase() {
 	}
 	db = database
 	createUserTable()
+	createUserHistoryTable()
 }
 
 func closeRows(rows *sql.Rows) {

@@ -7,4 +7,5 @@ type User struct {
 	LastName string
 	Password string
 	CreatedAt string
+	Admin int
 }
